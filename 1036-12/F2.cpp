@@ -146,31 +146,16 @@ int main() {
             int x, y; cin >> x >> y;
             no[x][y] = 0;
         }
-        rrep(j,N-1,1) {
-            rrep(i,N-1,1) {
-                ckmin(no[i][j], no[i+1][j+1]+1);
-            }
-        }
+        rrep(j,N-1,1) rrep(i,N-1,1) ckmin(no[i][j], no[i+1][j+1]+1);
         dp[N+1][1] = 1;
         tot[N+1] = 1;
         rrep(i,N,1) {
-            rep(l,1,no[i][1]+1) {
-                hm[i][l] = tot[i+l];
-                dp[i][1] = ad(dp[i][1], sub(tot[i+l], dp[i+l][l+1]));
-            }
-            rep(j,1,N+1) {
-                sufhm[i][j] = ad(sufhm[i+1][j], hm[i][j]);
-            }
-            rep(j,2,N+1) {
-                int d = no[i][j];
-                dp[i][j] = sub(sufhm[i+1][j-1], sufhm[i+d+1][j-1]);
-            }
-            rep(j,1,N+1) {
-                tot[i] = ad(tot[i], dp[i][j]);
-            }
+            rep(l,1,no[i][1]+1) hm[i][l] = tot[i+l], dp[i][1] = ad(dp[i][1], sub(tot[i+l], dp[i+l][l+1]));
+            rep(j,1,N+1) sufhm[i][j] = ad(sufhm[i+1][j], hm[i][j]);
+            rep(j,2,N+1) dp[i][j] = sub(sufhm[i+1][j-1], sufhm[i+no[i][j]+1][j-1]);
+            rep(j,1,N+1) tot[i] = ad(tot[i], dp[i][j]);
         }
-        int ans = tot[1];
-        cout << ans << endl;
+        cout << tot[1] << endl;
     }
 
     #ifdef MAGIKARP

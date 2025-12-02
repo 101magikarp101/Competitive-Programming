@@ -1,6 +1,4 @@
 #include <bits/stdc++.h>
-#pragma GCC optimize("Ofast,unroll-loops,fast-math")
-#pragma GCC target("avx,avx2,fma")
 using namespace std;
 using ll = long long;
 #define MOD 998244353
@@ -87,8 +85,9 @@ template<class T> bool ckmax(T& a, const T& b) {
     return a < b ? a = b, 1 : 0; }
 
 int N, K;
-int pre[3005][3005][26];
-int dp[3005][3005];
+int8_t a[3005][3005];
+int16_t dp[3005][3005];
+int16_t res[3005][3005];
 
 int main() {
     ios::sync_with_stdio(0);
@@ -97,14 +96,49 @@ int main() {
     auto start_time = chrono::high_resolution_clock::now();
     #endif
 
-    cin >> N >> K;
+    // cin >> N >> K;
+    scanf("%d %d", &N, &K);
+    char s[3005];
     rep(i,1,N+1) {
+        // string s; cin >> s;
+        scanf("%s", s);
         rep(j,1,N+1) {
-            char c; cin >> c;
-            pre[i][j][c-'A'] = 1;
+            a[i][j] = s[j-1]-'A';
         }
     }
-    
+    rep(i,0,N+1) {
+        dp[i][0] = 10000;
+        dp[0][i] = 10000;
+    }
+    rep(k,0,K) {
+        // rep(i,0,N+1) {
+        //     rep(j,0,N+1) {
+        //         dp[i][j] = (a[i][j] == k) ? 1 : 10000;
+        //     }
+        // }
+        rep(i,1,N+1) {
+            rep(j,1,N+1) {
+                // dp[i][j] = min(min(dp[i][j], (int16_t)(dp[i-1][j]+1)), min((int16_t)(dp[i][j-1]+1), (int16_t)(dp[i-1][j-1]+1)));
+                // dp[i][j] = min<int16_t>(dp[i][j], min<int16_t>(dp[i-1][j]+1, min<int16_t>(dp[i][j-1]+1, dp[i-1][j-1]+1)));
+                // if (a[i][j] != k) {
+                //     dp[i][j] = min<int16_t>(dp[i-1][j], min<int16_t>(dp[i][j-1], dp[i-1][j-1])) + 1;
+                // } else {
+                //     dp[i][j] = 1;
+                // }
+                dp[i][j] = (a[i][j] == k) ? 1 : min<int16_t>({dp[i-1][j], dp[i][j-1], dp[i-1][j-1]}) + 1;
+                // ckmax(res[i][j], dp[i][j]);
+                res[i][j] = max<int16_t>(res[i][j], dp[i][j]);
+            }
+        }
+    }
+    ll ans = 0;
+    rep(i,1,N+1) {
+        rep(j,1,N+1) {
+            ans += max(0, min(j, i) - res[i][j] + 1);
+            // int dist = min(j, i);
+            // ans += max(0, dist - res[i][j] + 1);
+        }
+    }
     cout << ans << endl;
 
     #ifdef MAGIKARP

@@ -1,0 +1,16 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     worldmap
+relocations:
+  - { offset: 0x7ABC, size: 0x8, addend: 0x0, symName: __ZNSt19_UninitDestroyGuardIPSt6vectorIiSaIiEEvED1Ev, symObjAddr: 0x200, symBinAddr: 0x1000008C0, symSize: 0x70 }
+  - { offset: 0x8E53, size: 0x8, addend: 0x0, symName: __ZNSt6vectorIS_IS_IiSaIiEESaIS1_EESaIS3_EED1Ev, symObjAddr: 0x148, symBinAddr: 0x100000808, symSize: 0xB8 }
+  - { offset: 0x92D1, size: 0x8, addend: 0x0, symName: __ZNSt6vectorISt4pairIS_IiSaIiEES2_ESaIS3_EED1Ev, symObjAddr: 0xC0, symBinAddr: 0x100000780, symSize: 0x88 }
+  - { offset: 0x96DB, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x380, symBinAddr: 0x100000B40, symSize: 0xE90 }
+  - { offset: 0xD3F7, size: 0x8, addend: 0x0, symName: __ZNSt12_Vector_baseIiSaIiEED2Ev.isra.0, symObjAddr: 0x0, symBinAddr: 0x1000006C0, symSize: 0x10 }
+  - { offset: 0xD413, size: 0x8, addend: 0x0, symName: __ZNSt12_Vector_baseIiSaIiEED2Ev.isra.0, symObjAddr: 0x0, symBinAddr: 0x1000006C0, symSize: 0x10 }
+  - { offset: 0xD4CC, size: 0x8, addend: 0x0, symName: __ZNSt6vectorIiSaIiEEC1EmRKS0_.isra.0, symObjAddr: 0x10, symBinAddr: 0x1000006D0, symSize: 0xB0 }
+  - { offset: 0xD7CA, size: 0x8, addend: 0x0, symName: __ZNSt12_Vector_baseISt6vectorIiSaIiEESaIS2_EED2Ev.isra.0, symObjAddr: 0x36C, symBinAddr: 0x100000B14, symSize: 0x10 }
+  - { offset: 0xD7E6, size: 0x8, addend: 0x0, symName: __ZNSt12_Vector_baseISt6vectorIiSaIiEESaIS2_EED2Ev.isra.0, symObjAddr: 0x36C, symBinAddr: 0x100000B14, symSize: 0x10 }
+  - { offset: 0xD8C0, size: 0x8, addend: 0x0, symName: __Z10create_mapiiSt6vectorIiSaIiEES1_, symObjAddr: 0x0, symBinAddr: 0x100000940, symSize: 0x1D4 }
+  - { offset: 0x10772, size: 0x8, addend: 0x0, symName: __Z10create_mapiiSt6vectorIiSaIiEES1_, symObjAddr: 0x0, symBinAddr: 0x100000940, symSize: 0x1D4 }
+...
