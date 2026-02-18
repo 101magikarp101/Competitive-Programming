@@ -119,7 +119,7 @@ int main() {
         // cerr << "Processing state: (" << x << ", " << y << ") with moves: " << m << endl;
         // cerr << "previous state: (" << pre[x][y].a << ", " << pre[x][y].b << ") with moves: " << pre[x][y].m << endl;
         pq.pop();
-        if (x == X || y == X) {
+        if (x == X) {
             e = {x, y};
             break;
         }

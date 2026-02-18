@@ -92,44 +92,79 @@ template<class T> bool ckmin(T& a, const T& b) {
 template<class T> bool ckmax(T& a, const T& b) {
     return a < b ? a = b, 1 : 0; }
 
-struct LiChao {
-    struct Line {
-        ll m, b; // y = m*x + b
-        inline ll get(ll x) const { return m * x + b; }
-    };
-    int X; // domain is [0..X]
-    vt<Line> st;
-    vt<bool> has; // whether node has a line
-    static constexpr ll INF = (ll)4e18;
-
-    LiChao(int X_) : X(X_) {
-        st.resize(4*(X+5));
-        has.assign(4*(X+5),0);
+struct Line {
+    ll a = 0, b = 4e18; // y = a*x + b
+    ll get(ll x) {
+        return a*x + b;
     }
-
-    void add_line(Line nw, int p, int l, int r) {
-        int m = (l+r)>>1;
-        if (!has[p]) { st[p] = nw; has[p] = 1; return; }
-        Line cur = st[p];
-        bool lef = nw.get(l) < cur.get(l);
-        bool mid = nw.get(m) < cur.get(m);
-        if (mid) { swap(st[p], nw); cur = st[p]; }
-        if (l == r) return;
-        if (lef != mid) add_line(nw, p << 1, l, m);
-        else add_line(nw, p << 1 | 1, m + 1, r);
-    }
-    void add_line(ll m, ll b) { add_line({m, b}, 1, 0, X); }
-
-    ll query(ll x, int p, int l, int r) const {
-        if (!has[p]) return INF;
-        ll res = st[p].get(x);
-        if (l == r) return res;
-        int m = (l + r) >> 1;
-        if (x <= m) return min(res, query(x, p << 1, l, m));
-        else return min(res, query(x, p << 1 | 1, m + 1, r));
-    }
-    ll query(ll x) const { return query(x, 1, 0, X); }
 };
+
+struct LiChao;
+vt<LiChao*> tree;
+
+void add_node(int& x);
+
+// node of Li Chao Tree, query for minimum
+struct LiChao {
+    Line line;
+    int l = -1, r = -1;
+    void insert(Line nl, ll s, ll e) {
+        ll m = (s+e)/2;
+        bool left = nl.get(s) < line.get(s);
+        bool mid = nl.get(m) < line.get(m);
+        if (mid) {
+            swap(line, nl);
+        }
+        if (e - s == 1) {
+            return;
+        } else if (left != mid) {
+            add_node(l);
+            tree[l]->insert(nl, s, m);
+        } else {
+            add_node(r);
+            tree[r]->insert(nl, m, e);
+        }
+    }
+    // insert new line segment nl of [sl, sr) in node covering [s, e)
+    void insert_seg(Line nl, ll s, ll e, ll sl, ll sr) {
+        if (sr <= s || e <= sl) return;
+        if (sl <= s && e <= sr) {
+            insert(nl, s, e);
+            return;
+        }
+        if (e - s == 1) {
+            insert(nl, s, e);
+            return;
+        }
+        ll m = (s+e)/2;
+        if (sl < m) {
+            add_node(l);
+            tree[l]->insert_seg(nl, s, m, sl, sr);
+        }
+        if (sr > m) {
+            add_node(r);
+            tree[r]->insert_seg(nl, m, e, sl, sr);
+        }
+    }
+    ll get(ll x, ll s, ll e) {
+        ll m = (s+e)/2;
+        ll ret = line.get(x);
+        if (e - s == 1) {
+            return ret;
+        } else if (x < m && l != -1) {
+            ckmin(ret, tree[l]->get(x, s, m));
+        } else if (x >= m && r != -1) {
+            ckmin(ret, tree[r]->get(x, m, e));
+        }
+        return ret;
+    }
+};
+
+void add_node(int& x) {
+    if (x != -1) return;
+    tree.pb(new LiChao());
+    x = sz(tree)-1;
+}
 
 int N, Q;
 
@@ -141,8 +176,25 @@ int main() {
     #endif
 
     cin >> N >> Q;
+    int x = -1;
+    add_node(x);
     rep(i,0,N) {
-        int l
+        ll l, r, a, b; cin >> l >> r >> a >> b;
+        Line nl; nl.a = a; nl.b = b;
+        tree[x]->insert_seg(nl, -1e9, 1e9, l, r);
+    }
+    while (Q--) {
+        int t; cin >> t;
+        if (t==0) {
+            ll l, r, a, b; cin >> l >> r >> a >> b;
+            Line nl; nl.a = a; nl.b = b;
+            tree[x]->insert_seg(nl, -1e9, 1e9, l, r);
+        } else {
+            ll qx; cin >> qx;
+            ll res = tree[x]->get(qx, -1e9, 1e9);
+            if (res >= 4e18) cout << "INFINITY" << endl;
+            else cout << res << endl;
+        }
     }
 
     #ifdef MAGIKARP

@@ -86,19 +86,16 @@ template<class T> bool ckmax(T& a, const T& b) {
 
 int N;
 vi adj[100005];
-vi ls;
+vi v;
 
-int dfs(int u, int p) {
-    int cnt = 0;
-    each(v, adj[u]) {
-        if (v == p) continue;
-        cnt += dfs(v, u);
+void dfs(int u, int p) {
+    if (sz(adj[u]) == 1) {
+        v.pb(u);
     }
-    if (cnt == 0) {
-        ls.pb(u);
-        return 1;
-    } else {
-        return cnt;
+    each(w, adj[u]) {
+        if (w != p) {
+            dfs(w, u);
+        }
     }
 }
 
@@ -116,10 +113,18 @@ int main() {
         adj[u].pb(v);
         adj[v].pb(u);
     }
-    dfs(1,-1);
-    cout << sz(ls)-1 << endl;
-    rep(i,0,sz(ls)-1) {
-        cout << ls[i] << " " << ls[i+1] << endl;
+    dfs(1, -1);
+    vt<pii> ans;
+    int n = sz(v);
+    rep(i,0,n/2) {
+        ans.pb({v[i], v[i + n/2]});
+    }
+    if (n % 2 == 1) {
+        ans.pb({v[n/2], v[n-1]});
+    }
+    cout << sz(ans) << endl;
+    each(p, ans) {
+        cout << p.x << " " << p.y << endl;
     }
 
     #ifdef MAGIKARP

@@ -84,7 +84,7 @@ template<class T> bool ckmin(T& a, const T& b) {
 template<class T> bool ckmax(T& a, const T& b) {
     return a < b ? a = b, 1 : 0; }
 
-int N;
+int N, K;
 vi b;
 
 void add(int x) {
@@ -101,12 +101,38 @@ int main() {
     auto start_time = chrono::high_resolution_clock::now();
     #endif
 
-    cin >> N;
+    cin >> N >> K;
     rep(i,0,N) {
         int x; cin >> x;
         add(x);
     }
     sort(all(b));
+    rep(i,0,sz(b)) {
+        rep(j,i+1,sz(b)) {
+            ckmin(b[j], b[i] ^ b[j]);
+        }
+    }
+    int rem = N - sz(b);
+    if (rem >= 18) {
+        rep(i,0,K) {
+            cout << 0 << ' ';
+        }
+        cout << endl;
+    } else {
+        rep(i,0,1<<sz(b)) {
+            int x = 0;
+            rep(j,0,sz(b)) {
+                if (i & (1<<j)) x ^= b[j];
+            }
+            rep(j,0,1<<rem) {
+                if (K == 0) break;
+                cout << x << ' ';
+                K--;
+            }
+            if (K == 0) break;
+        }
+        cout << endl;
+    }
 
     #ifdef MAGIKARP
     auto duration = chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now() - start_time).count();

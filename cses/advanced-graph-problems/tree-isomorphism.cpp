@@ -16,6 +16,7 @@ template <class T> using vvvvt = vt<vvvt<T>>;
 #define mset multiset
 #define fi first
 #define se second
+#define vi vt<int>
 #define rep(i,a,b) for(int i=a;i<b;i++)
 #define repl(i,a,b) for(ll i=a;i<b;i++)
 #define rrep(i,a,b) for(int i=a;i>=b;i--)
@@ -113,9 +114,14 @@ int T, N;
 
 int hg(int u, int p, vvt<int> &adj) {
     int h = C;
+    vi a;
     each(v, adj[u]) {
         if (v == p) continue;
-        h = mul(h, hg(v, u, adj) + 1);
+        a.pb(hg(v, u, adj));
+    }
+    sort(all(a));
+    each(x, a) {
+        h = mul(h, ad(x, 37));
     }
     return h;
 }
