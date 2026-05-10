@@ -92,69 +92,71 @@ template<class T> bool ckmin(T& a, const T& b) {
 template<class T> bool ckmax(T& a, const T& b) {
     return a < b ? a = b, 1 : 0; }
 
-// a and b are in range [0, MOD2-1]
-inline int ad(int a, int b) {
-    a+=b;
-    if (a>=MOD2) a-=MOD2;
-    return a;
+int T, N, Q;
+vi adj[500005];
+vt<pll> adj2[500005]; // {v, r}
+ll mod[500005];
+ll l[500005];
+ll qs[500005];
+
+ll euclid(ll a, ll b, ll &x, ll &y) {
+	if (!b) return x = 1, y = 0, a;
+	ll d = euclid(b, a % b, y, x);
+	return y -= a/b * x, d;
+}
+/**
+ * Author: Simon Lindholm
+ * Date: 2019-05-22
+ * License: CC0
+ * Description: Chinese Remainder Theorem.
+ *
+ * \texttt{crt(a, m, b, n)} computes $x$ such that $x\equiv a \pmod m$, $x\equiv b \pmod n$.
+ * If $|a| < m$ and $|b| < n$, $x$ will obey $0 \le x < \text{lcm}(m, n)$.
+ * Assumes $mn < 2^{62}$.
+ * Time: $\log(n)$
+ * Status: Works
+ */
+ll crt(ll a, ll m, ll b, ll n) {
+	if (n > m) swap(a, b), swap(m, n);
+	ll x, y, g = euclid(m, n, x, y);
+	// assert((a - b) % g == 0); // else no solution
+    if ((a - b) % g != 0) return -1; // No solution
+	x = (b - a) % n * x % n / g * m + a;
+	return x < 0 ? x + m*n/g : x;
 }
 
-// a and b are in range [0, MOD2-1]
-inline int sub(int a, int b) {
-    a-=b;
-    if (a<0) a+=MOD2;
-    return a;
+ll lcm(ll a, ll b) {
+    return a / gcd(a, b) * b;
 }
 
-// a and b are in range [0, MOD2-1], note the use of 1LL to prevent integer overflow when multiplying a and b
-inline int mul(int a, int b) {
-    return (int)((a*1LL*b)%MOD2);
-}
-
-// a is in range [0, MOD2-1], b can be any non-negative integer
-// returns a^b mod MOD2
-inline int binpow(int a, int b) {
-    int res = 1;
-    // first, write b in binary, and for each bit from smallest to largest, if it's 1, multiply res by the current value of a
-    // a is updated from a to a^2, a^4, a^8, ... for each bit of b
-    while (b) {
-        if (b&1) res = mul(res, a);
-        a = mul(a, a);
-        b >>= 1;
+void dfs(int u, int up, ll m, ll r) {
+    vt<pll> rs;
+    ll n = sz(adj[u]);
+    rep(i,0,n) {
+        int v = adj[u][i];
+        ll res = crt(r, m, i, n);
+        if (res != -1) rs.pb({res, i});
     }
-    return res;
-}
-
-// calculates a^-1 mod MOD2, assuming a and MOD2 are coprime (which is true if MOD2 is prime and a is not divisible by MOD2)
-inline int inv(int a) {
-    return binpow(a, MOD2-2);
-}
-
-// calculates a/b mod MOD2
-inline int di(int a, int b) {
-    return mul(a, inv(b));
-}
-
-bool p[1000005];
-vector<int> primes;
-
-void sieve(int n) {
-    // p[i] = 0 means i is prime, p[i] = 1 means i is composite
-    p[0] = p[1] = 1;
-    for (int i = 2; i <= n; i++) {
-        if (!p[i]) {
-            primes.pb(i);
-            if ((long long)i*i <= n) {
-                for (int j = i*i; j <= n; j += i) { // we can start from i*2 like in the slides, why start from i*i? this is left as an exercise to the reader
-                    p[j] = 1;
-                }
-            }
+    cout << "u:" << u << " up:" << up << " m:" << m << " r:" << r << endl;
+    cout << "rs:";
+    each(i,rs) cout << " " << i;
+    cout << endl;
+    if (sz(rs) > 1) {
+        mod[up] = lcm(m, n);
+        adj2[up].pb({m, r});
+    }
+    rep(i,0,sz(rs)) {
+        int v = adj[u][rs[i].y];
+        ll m2 = lcm(m, n);
+        ll r2 = rs[i].x;
+        if (sz(rs) > 1) {
+            cout << "dfs(" << v << ", " << u << ", " << m2 << ", " << r2 << ")" << endl;
+            dfs(v, v, m2, r2);
+        } else {
+            dfs(v, up, m2, r2);
         }
     }
 }
-
-int T, N;
-int a[200005];
 
 int main() {
     ios::sync_with_stdio(0);
@@ -163,7 +165,22 @@ int main() {
     auto start_time = chrono::high_resolution_clock::now();
     #endif
 
-    
+    cin >> T;
+    while (T--) {
+        cin >> N >> Q;
+        rep(i,1,N+1) {
+            adj[i].clear();
+            adj2[i].clear();
+            mod[i] = 1;
+        }
+        rep(i,2,N+1) {
+            int x; cin >> x;
+            adj[x].pb(i);
+        }
+        rep(i,2,N+1) cin >> l[i];
+        rep(i,0,Q) cin >> qs[i];
+        dfs(1,1,1,0);
+    }
 
     #ifdef MAGIKARP
     auto duration = chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now() - start_time).count();

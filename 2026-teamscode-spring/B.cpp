@@ -92,69 +92,44 @@ template<class T> bool ckmin(T& a, const T& b) {
 template<class T> bool ckmax(T& a, const T& b) {
     return a < b ? a = b, 1 : 0; }
 
-// a and b are in range [0, MOD2-1]
-inline int ad(int a, int b) {
-    a+=b;
-    if (a>=MOD2) a-=MOD2;
-    return a;
-}
+int T, N, M;
+int a[100005], b[100005];
 
-// a and b are in range [0, MOD2-1]
-inline int sub(int a, int b) {
-    a-=b;
-    if (a<0) a+=MOD2;
-    return a;
-}
+// ll dx[] = {-1,0,1,0};
+// ll dy[] = {0,1,0,-1};
+pll ds[] = {{-1,0}, {0,1}, {1,0}, {0,-1}};
 
-// a and b are in range [0, MOD2-1], note the use of 1LL to prevent integer overflow when multiplying a and b
-inline int mul(int a, int b) {
-    return (int)((a*1LL*b)%MOD2);
-}
-
-// a is in range [0, MOD2-1], b can be any non-negative integer
-// returns a^b mod MOD2
-inline int binpow(int a, int b) {
-    int res = 1;
-    // first, write b in binary, and for each bit from smallest to largest, if it's 1, multiply res by the current value of a
-    // a is updated from a to a^2, a^4, a^8, ... for each bit of b
-    while (b) {
-        if (b&1) res = mul(res, a);
-        a = mul(a, a);
-        b >>= 1;
-    }
-    return res;
-}
-
-// calculates a^-1 mod MOD2, assuming a and MOD2 are coprime (which is true if MOD2 is prime and a is not divisible by MOD2)
-inline int inv(int a) {
-    return binpow(a, MOD2-2);
-}
-
-// calculates a/b mod MOD2
-inline int di(int a, int b) {
-    return mul(a, inv(b));
-}
-
-bool p[1000005];
-vector<int> primes;
-
-void sieve(int n) {
-    // p[i] = 0 means i is prime, p[i] = 1 means i is composite
-    p[0] = p[1] = 1;
-    for (int i = 2; i <= n; i++) {
-        if (!p[i]) {
-            primes.pb(i);
-            if ((long long)i*i <= n) {
-                for (int j = i*i; j <= n; j += i) { // we can start from i*2 like in the slides, why start from i*i? this is left as an exercise to the reader
-                    p[j] = 1;
-                }
+bool isect(pll a1, pll a2, pll p1, pll p2) {
+    if (p1.x == p2.x) {
+        if (a1.x <= p1.x && p1.x <= a2.x) {
+            if (a1.y > a2.y) swap(a1, a2);
+            if (p1.y > p2.y) swap(p1, p2);
+            if (a1.y > p1.y) {
+                swap(a1, p1);
+                swap(a2, p2);
             }
-        }
+            return p1.y <= a2.y;
+        } else return 0;
+    } else {
+        if (a1.y <= p1.y && p1.y <= a2.y) {
+            if (a1.x > a2.x) swap(a1, a2);
+            if (p1.x > p2.x) swap(p1, p2);
+            if (a1.x > p1.x) {
+                swap(a1, p1);
+                swap(a2, p2);
+            }
+            return p1.x <= a2.x;
+        } else return 0;
     }
+    return 0;
 }
 
-int T, N;
-int a[200005];
+void addpoint(pll &a1, pll &a2, pll p) {
+    ckmin(a1.x, p.x);
+    ckmin(a1.y, p.y);
+    ckmax(a2.x, p.x);
+    ckmax(a2.y, p.y);
+}
 
 int main() {
     ios::sync_with_stdio(0);
@@ -163,7 +138,31 @@ int main() {
     auto start_time = chrono::high_resolution_clock::now();
     #endif
 
-    
+    cin >> T;
+    while (T--) {
+        cin >> N >> M;
+        pll posa = {0,0}, posb = {0,0};
+        pll pa1 = {0,0}, pa2 = {0,0}, pb1 = {0,0}, pb2 = {0,0};
+        rep(i,0,N) cin >> a[i];
+        rep(i,0,M) cin >> b[i];
+        int da = 0, db = 2;
+        bool ans = 0;
+        rep(i,0,max(N, M)) {
+            if (i < N) {
+                if (i) ans |= isect(pb1, pb2, posa, posa+ds[da]*a[i]);
+                posa += ds[da]*a[i];
+                da = (da+1)%4;
+                addpoint(pa1, pa2, posa);
+            }
+            if (i < M) {
+                if (i) ans |= isect(pa1, pa2, posb, posb+ds[db]*b[i]);
+                posb += ds[db]*b[i];
+                db = (db+1)%4;
+                addpoint(pb1, pb2, posb);
+            }
+        }
+        yesno(ans);
+    }
 
     #ifdef MAGIKARP
     auto duration = chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now() - start_time).count();

@@ -92,69 +92,8 @@ template<class T> bool ckmin(T& a, const T& b) {
 template<class T> bool ckmax(T& a, const T& b) {
     return a < b ? a = b, 1 : 0; }
 
-// a and b are in range [0, MOD2-1]
-inline int ad(int a, int b) {
-    a+=b;
-    if (a>=MOD2) a-=MOD2;
-    return a;
-}
-
-// a and b are in range [0, MOD2-1]
-inline int sub(int a, int b) {
-    a-=b;
-    if (a<0) a+=MOD2;
-    return a;
-}
-
-// a and b are in range [0, MOD2-1], note the use of 1LL to prevent integer overflow when multiplying a and b
-inline int mul(int a, int b) {
-    return (int)((a*1LL*b)%MOD2);
-}
-
-// a is in range [0, MOD2-1], b can be any non-negative integer
-// returns a^b mod MOD2
-inline int binpow(int a, int b) {
-    int res = 1;
-    // first, write b in binary, and for each bit from smallest to largest, if it's 1, multiply res by the current value of a
-    // a is updated from a to a^2, a^4, a^8, ... for each bit of b
-    while (b) {
-        if (b&1) res = mul(res, a);
-        a = mul(a, a);
-        b >>= 1;
-    }
-    return res;
-}
-
-// calculates a^-1 mod MOD2, assuming a and MOD2 are coprime (which is true if MOD2 is prime and a is not divisible by MOD2)
-inline int inv(int a) {
-    return binpow(a, MOD2-2);
-}
-
-// calculates a/b mod MOD2
-inline int di(int a, int b) {
-    return mul(a, inv(b));
-}
-
-bool p[1000005];
-vector<int> primes;
-
-void sieve(int n) {
-    // p[i] = 0 means i is prime, p[i] = 1 means i is composite
-    p[0] = p[1] = 1;
-    for (int i = 2; i <= n; i++) {
-        if (!p[i]) {
-            primes.pb(i);
-            if ((long long)i*i <= n) {
-                for (int j = i*i; j <= n; j += i) { // we can start from i*2 like in the slides, why start from i*i? this is left as an exercise to the reader
-                    p[j] = 1;
-                }
-            }
-        }
-    }
-}
-
 int T, N;
-int a[200005];
+ll a[200005];
 
 int main() {
     ios::sync_with_stdio(0);
@@ -163,7 +102,18 @@ int main() {
     auto start_time = chrono::high_resolution_clock::now();
     #endif
 
-    
+    cin >> T;
+    while (T--) {
+        cin >> N;
+        rep(i,0,N) cin >> a[i];
+        a[N] = 0;
+        int ans = 0;
+        rrep(i,N-1,0) {
+            ckmax(a[i], a[i]+a[i+1]);
+            if (a[i] > 0) ans++;
+        }
+        cout << ans << endl;
+    }
 
     #ifdef MAGIKARP
     auto duration = chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now() - start_time).count();

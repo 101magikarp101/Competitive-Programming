@@ -102,6 +102,13 @@ int main() {
     auto start_time = chrono::high_resolution_clock::now();
     #endif
 
+    multiset<int> m;
+    upper_bound(m.begin(), m.end(), 1); // O(N)
+    m.upper_bound(1); // O(logN)
+
+    m.erase(1); // erases all 1s
+    m.erase(m.find(1)); // erases one 1, if it exists
+
     cin >> N;
     rep(i,0,N) cin >> a[i];
     ll res1 = 0;

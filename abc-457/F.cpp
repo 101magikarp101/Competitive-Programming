@@ -92,31 +92,24 @@ template<class T> bool ckmin(T& a, const T& b) {
 template<class T> bool ckmax(T& a, const T& b) {
     return a < b ? a = b, 1 : 0; }
 
-// a and b are in range [0, MOD2-1]
 inline int ad(int a, int b) {
     a+=b;
-    if (a>=MOD2) a-=MOD2;
+    if (a>=MOD) a-=MOD;
     return a;
 }
 
-// a and b are in range [0, MOD2-1]
 inline int sub(int a, int b) {
     a-=b;
-    if (a<0) a+=MOD2;
+    if (a<0) a+=MOD;
     return a;
 }
 
-// a and b are in range [0, MOD2-1], note the use of 1LL to prevent integer overflow when multiplying a and b
 inline int mul(int a, int b) {
-    return (int)((a*1LL*b)%MOD2);
+    return (int)((a*1LL*b)%MOD);
 }
 
-// a is in range [0, MOD2-1], b can be any non-negative integer
-// returns a^b mod MOD2
 inline int binpow(int a, int b) {
     int res = 1;
-    // first, write b in binary, and for each bit from smallest to largest, if it's 1, multiply res by the current value of a
-    // a is updated from a to a^2, a^4, a^8, ... for each bit of b
     while (b) {
         if (b&1) res = mul(res, a);
         a = mul(a, a);
@@ -125,33 +118,88 @@ inline int binpow(int a, int b) {
     return res;
 }
 
-// calculates a^-1 mod MOD2, assuming a and MOD2 are coprime (which is true if MOD2 is prime and a is not divisible by MOD2)
 inline int inv(int a) {
-    return binpow(a, MOD2-2);
+    return binpow(a, MOD-2);
 }
 
-// calculates a/b mod MOD2
 inline int di(int a, int b) {
     return mul(a, inv(b));
 }
 
-bool p[1000005];
-vector<int> primes;
-
-void sieve(int n) {
-    // p[i] = 0 means i is prime, p[i] = 1 means i is composite
-    p[0] = p[1] = 1;
-    for (int i = 2; i <= n; i++) {
-        if (!p[i]) {
-            primes.pb(i);
-            if ((long long)i*i <= n) {
-                for (int j = i*i; j <= n; j += i) { // we can start from i*2 like in the slides, why start from i*i? this is left as an exercise to the reader
-                    p[j] = 1;
-                }
-            }
-        }
+template <class T> class LzSegTree {
+  private:
+    const T DEFAULT = 0;
+    vt<T> tr;
+    vt<T> lz;
+    int len;
+    void push(int n, int s, int m, int e) {
+        if (lz[n] == 1) return;
+        lz[2*n] = mul(lz[2*n], lz[n]);
+        lz[2*n+1] = mul(lz[2*n+1], lz[n]);
+        tr[2*n] = mul(tr[2*n], lz[n]);
+        tr[2*n+1] = mul(tr[2*n+1], lz[n]);
+        lz[n] = 1;
     }
-}
+    void _add(int n, int s, int e, int idx, T val) {
+        if (s > idx || e < idx) return;
+        if (s == e) {
+            tr[n] = ad(tr[n], val);
+            return;
+        }
+        int m = (s + e) / 2;
+        push(n, s, m, e);
+        _add(n*2, s, m, idx, val);
+        _add(n*2+1, m+1, e, idx, val);
+        tr[n] = ad(tr[n*2], tr[n*2+1]);
+    }
+    void _range_mul(int n, int s, int e, int l, int r, T val) {
+        if (s > r || e < l) return;
+        if (l <= s && e <= r) {
+            tr[n] = mul(tr[n], val);
+            lz[n] = mul(lz[n], val);
+            return;
+        }
+        int m = (s + e) / 2;
+        push(n, s, m, e);
+        _range_mul(n*2, s, m, l, r, val);
+        _range_mul(n*2+1, m+1, e, l, r, val);
+        tr[n] = ad(tr[n*2], tr[n*2+1]);
+    }
+    T _query(int n, int s, int e, int l, int r) {
+        if (s > r || e < l) return DEFAULT;
+        if (l <= s && e <= r) return tr[n];
+        int m = (s + e) / 2;
+        push(n, s, m, e);
+        T left = _query(n*2, s, m, l, r);
+        T right = _query(n*2+1, m+1, e, l, r);
+        return ad(left, right);
+    }
+  public:
+    LzSegTree(vt<T> &a) {
+        len = 1;
+        while (len < sz(a)) len *= 2;
+        tr.assign(len*2, DEFAULT);
+        lz.assign(len*2, 1);
+        rep(i,0,sz(a)) tr[i+len] = a[i];
+        rrep(i,len-1,1) tr[i] = ad(tr[i*2], tr[i*2+1]);
+    }
+    LzSegTree(int n) {
+        len = 1;
+        while (len < n) len *= 2;
+        tr.assign(len*2, DEFAULT);
+        lz.assign(len*2, 1);
+    }
+    void add(int idx, T val) {
+        _add(1, 0, len-1, idx, val);
+    }
+    void range_mul(int l, int r, T val) {
+        _range_mul(1, 0, len-1, l, r, val);
+    }
+    // query range [l, r]
+    T query(int l, int r) {
+        return _query(1, 0, len-1, l, r);
+    }
+};
 
 int T, N;
 int a[200005];
@@ -163,7 +211,30 @@ int main() {
     auto start_time = chrono::high_resolution_clock::now();
     #endif
 
-    
+    cin >> N;
+    rep(i,0,N-1) {
+        cin >> a[i];
+    }
+    if (a[N-2] != 1) {
+        cout << 0 << endl;
+        return 0;
+    }
+    LzSegTree<int> seg(N);
+    seg.add(N-2,1);
+    seg.add(N-1,1);
+    rrep(i,N-3,0) {
+        int x = 0;
+        if (i+a[i] < N) x = seg.query(i+a[i], i+a[i]);
+        if (a[i] == a[i+1]) {
+            seg.range_mul(0, N-1, N-i-2);
+        } else {
+            seg.range_mul(0, N-1, 0);
+        }
+        seg.add(i, x);
+        if (i+a[i] < N) seg.add(i+a[i], x);
+    }
+    int ans = seg.query(0, N-1);
+    cout << ans << endl;
 
     #ifdef MAGIKARP
     auto duration = chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now() - start_time).count();

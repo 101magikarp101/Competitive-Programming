@@ -92,60 +92,20 @@ template<class T> bool ckmin(T& a, const T& b) {
 template<class T> bool ckmax(T& a, const T& b) {
     return a < b ? a = b, 1 : 0; }
 
-// a and b are in range [0, MOD2-1]
-inline int ad(int a, int b) {
-    a+=b;
-    if (a>=MOD2) a-=MOD2;
-    return a;
-}
-
-// a and b are in range [0, MOD2-1]
-inline int sub(int a, int b) {
-    a-=b;
-    if (a<0) a+=MOD2;
-    return a;
-}
-
-// a and b are in range [0, MOD2-1], note the use of 1LL to prevent integer overflow when multiplying a and b
-inline int mul(int a, int b) {
-    return (int)((a*1LL*b)%MOD2);
-}
-
-// a is in range [0, MOD2-1], b can be any non-negative integer
-// returns a^b mod MOD2
-inline int binpow(int a, int b) {
-    int res = 1;
-    // first, write b in binary, and for each bit from smallest to largest, if it's 1, multiply res by the current value of a
-    // a is updated from a to a^2, a^4, a^8, ... for each bit of b
-    while (b) {
-        if (b&1) res = mul(res, a);
-        a = mul(a, a);
-        b >>= 1;
-    }
-    return res;
-}
-
-// calculates a^-1 mod MOD2, assuming a and MOD2 are coprime (which is true if MOD2 is prime and a is not divisible by MOD2)
-inline int inv(int a) {
-    return binpow(a, MOD2-2);
-}
-
-// calculates a/b mod MOD2
-inline int di(int a, int b) {
-    return mul(a, inv(b));
-}
-
+int N, K;
+int a[100005];
 bool p[1000005];
-vector<int> primes;
+vi primes;
+map<int,vi> ps;
+int dp[100005];
 
 void sieve(int n) {
-    // p[i] = 0 means i is prime, p[i] = 1 means i is composite
     p[0] = p[1] = 1;
     for (int i = 2; i <= n; i++) {
         if (!p[i]) {
             primes.pb(i);
-            if ((long long)i*i <= n) {
-                for (int j = i*i; j <= n; j += i) { // we can start from i*2 like in the slides, why start from i*i? this is left as an exercise to the reader
+            if ((ll)i*i <= n) {
+                for (int j = i*i; j <= n; j += i) {
                     p[j] = 1;
                 }
             }
@@ -153,8 +113,15 @@ void sieve(int n) {
     }
 }
 
-int T, N;
-int a[200005];
+int binpow(int x, int y) {
+    int res = 1;
+    while (y) {
+        if (y&1) res = res*x;
+        x = x*x;
+        y >>= 1;
+    }
+    return res;
+}
 
 int main() {
     ios::sync_with_stdio(0);
@@ -163,7 +130,78 @@ int main() {
     auto start_time = chrono::high_resolution_clock::now();
     #endif
 
-    
+    sieve(1000000);
+
+    cin >> N >> K;
+    rep(i,0,N) cin >> a[i];
+    rep(i,0,N) {
+        int x = a[i];
+        each(pr, primes) {
+            if ((ll)pr*pr > x) break;
+            if (x%pr == 0) {
+                int cnt = 0;
+                while (x%pr == 0) {
+                    x /= pr;
+                    cnt++;
+                }
+                ps[pr].pb(cnt);
+            }
+        }
+        if (x > 1) {
+            ps[x].pb(1);
+        }
+    }
+    dp[0] = 1;
+    map<int,vt<pii>> ops;
+    each(x, ps) {
+        vi &v = x.se;
+        // cout << "prime: " << x.fi << endl;
+        // cout << "exps: "; each(i,v) cout << i << " "; cout << endl;
+        int sum = accumulate(all(v), 0);
+        int ma = 0, mi = INT_MAX;
+        each(i,v) {
+            ckmax(ma, i);
+            ckmin(mi, i);
+        }
+        int cur = 0;
+        if (sz(v) == N) {
+            dp[0] *= binpow(x.fi, mi);
+            cur = mi;
+        }
+        vi cnt(ma+1);
+        each(i,v) {
+            cnt[i]++;
+        }
+        rrep(i,ma-1,1) {
+            cnt[i] += cnt[i+1];
+        }
+        rep(i,1,ma+1) {
+            cnt[i] = N-cnt[i];
+            cnt[i] += cnt[i-1];
+        }
+        rep(i,cur+1,ma+1) {
+            if (cnt[i] <= K && N*i <= sum) {
+                // cout << "op: " << x.fi << "^" << i-cur << " cnt: " << cnt[i] << endl;
+                ops[x.fi].pb({binpow(x.fi, i-cur), cnt[i]});
+            }
+        }
+    }
+    each(x, ops) {
+        rrep(i,K,1) {
+            each(op, x.se) {
+                if (op.y <= i) {
+                    ckmax(dp[i], dp[i-op.y]*op.x);
+                }
+            }
+        }
+    }
+    rep(i,1,K+1) {
+        ckmax(dp[i], dp[i-1]);
+    }
+    rep(i,1,K+1) {
+        cout << dp[i] << " ";
+    }
+    cout << endl;
 
     #ifdef MAGIKARP
     auto duration = chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now() - start_time).count();

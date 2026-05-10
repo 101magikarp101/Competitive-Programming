@@ -92,31 +92,24 @@ template<class T> bool ckmin(T& a, const T& b) {
 template<class T> bool ckmax(T& a, const T& b) {
     return a < b ? a = b, 1 : 0; }
 
-// a and b are in range [0, MOD2-1]
 inline int ad(int a, int b) {
     a+=b;
     if (a>=MOD2) a-=MOD2;
     return a;
 }
 
-// a and b are in range [0, MOD2-1]
 inline int sub(int a, int b) {
     a-=b;
     if (a<0) a+=MOD2;
     return a;
 }
 
-// a and b are in range [0, MOD2-1], note the use of 1LL to prevent integer overflow when multiplying a and b
 inline int mul(int a, int b) {
     return (int)((a*1LL*b)%MOD2);
 }
 
-// a is in range [0, MOD2-1], b can be any non-negative integer
-// returns a^b mod MOD2
 inline int binpow(int a, int b) {
     int res = 1;
-    // first, write b in binary, and for each bit from smallest to largest, if it's 1, multiply res by the current value of a
-    // a is updated from a to a^2, a^4, a^8, ... for each bit of b
     while (b) {
         if (b&1) res = mul(res, a);
         a = mul(a, a);
@@ -125,36 +118,55 @@ inline int binpow(int a, int b) {
     return res;
 }
 
-// calculates a^-1 mod MOD2, assuming a and MOD2 are coprime (which is true if MOD2 is prime and a is not divisible by MOD2)
 inline int inv(int a) {
     return binpow(a, MOD2-2);
 }
 
-// calculates a/b mod MOD2
 inline int di(int a, int b) {
     return mul(a, inv(b));
 }
 
-bool p[1000005];
-vector<int> primes;
+int N, K;
+vi adj[200005];
+int siz[200005];
+int ans[200005];
 
-void sieve(int n) {
-    // p[i] = 0 means i is prime, p[i] = 1 means i is composite
-    p[0] = p[1] = 1;
-    for (int i = 2; i <= n; i++) {
-        if (!p[i]) {
-            primes.pb(i);
-            if ((long long)i*i <= n) {
-                for (int j = i*i; j <= n; j += i) { // we can start from i*2 like in the slides, why start from i*i? this is left as an exercise to the reader
-                    p[j] = 1;
-                }
-            }
-        }
+int fac[200005], ifac[200005];
+
+int nck(int n, int k) {
+    if (k < 0 || k > n) return 0;
+    return mul(fac[n], mul(ifac[k], ifac[n-k]));
+}
+
+void pre(int n) {
+    fac[0] = 1;
+    rep(i,1,n+1) {
+        fac[i] = mul(fac[i-1], i);
+    }
+    ifac[n] = inv(fac[n]);
+    rrep(i,n-1,0) {
+        ifac[i] = mul(ifac[i+1], i+1);
     }
 }
 
-int T, N;
-int a[200005];
+void dfs(int u, int p) {
+    siz[u] = 1;
+    each(v, adj[u]) {
+        if (v == p) continue;
+        dfs(v, u);
+        siz[u] += siz[v];
+    }
+}
+
+void dfs2(int u, int p) {
+    each(v, adj[u]) {
+        if (v == p) continue;
+        ans[v] = ans[u];
+        ans[v] = ad(ans[v], nck(N-siz[v], K));
+        ans[v] = sub(ans[v], nck(siz[v], K));
+        dfs2(v, u);
+    }
+}
 
 int main() {
     ios::sync_with_stdio(0);
@@ -163,7 +175,24 @@ int main() {
     auto start_time = chrono::high_resolution_clock::now();
     #endif
 
-    
+    pre(200000);
+
+    cin >> N >> K;
+    rep(i,0,N-1) {
+        int u, v; cin >> u >> v;
+        adj[u].pb(v);
+        adj[v].pb(u);
+    }
+    dfs(1,0);
+    rep(i,1,N+1) {
+        ans[1] = ad(ans[1], nck(siz[i], K));
+    }
+    ans[1] = sub(ans[1], nck(N, K));
+    dfs2(1,0);
+    rep(i,1,N+1) {
+        cout << ans[i] << " ";
+    }
+    cout << endl;
 
     #ifdef MAGIKARP
     auto duration = chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now() - start_time).count();
